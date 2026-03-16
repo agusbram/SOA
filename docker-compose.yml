@@ -1,0 +1,90 @@
+services:
+  influxdb:
+    # Fuente: https://docs.influxdata.com/influxdb/v2/install/?t=Docker
+    image: influxdb:2.8
+    ports:
+      # Sintaxis: "puerto_host:puerto_contenedor"
+      # El :-8086 es un valor por defecto si INFLUXDB_PORT no está definido en .env
+      - "${INFLUXDB_PORT:-8086}:8086"
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: ${INFLUXDB_USERNAME}
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUXDB_PASSWORD}
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUXDB_TOKEN}
+      DOCKER_INFLUXDB_INIT_ORG: ${INFLUXDB_ORG}
+      DOCKER_INFLUXDB_INIT_BUCKET: ${INFLUXDB_BUCKET}
+      DOCKER_INFLUXDB_INIT_RETENTION: ${INFLUXDB_RETENTION}
+    volumes:
+      # Usa volúmenes nombrados para que los datos persistan aunque se haga "docker compose down".
+      - type: volume
+        # Donde InfluxDB guarda sus datos internamente:
+        source: influxdb2-data
+        target: /var/lib/influxdb2
+      - type: volume
+        # Donde guarda su configuración generada en el setup.
+        source: influxdb2-config
+        target: /etc/influxdb2
+    restart: unless-stopped
+    healthcheck:
+      # "CMD" significa que Docker ejecuta el comando directamente,
+      # "influx ping" llama al endpoint GET /health de la API de InfluxDB.
+      # Si responde OK, el contenedor está "healthy".
+      # Esto permite que Telegraf espere a que InfluxDB esté realmente listo.
+      # Fuente: https://docs.influxdata.com/influxdb/v2/api/v2/#tag/Ping
+      test: ["CMD", "influx", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+      # start_period: los primeros 30s no cuenta como fallo aunque no responda,
+      # porque InfluxDB tarda un momento en inicializarse la primera vez.
+
+  telegraf:
+    # Fuentes:
+    # https://www.influxdata.com/blog/telegraf-deployment-strategies-docker-compose/
+    # https://docs.influxdata.com/telegraf/v1/install/?t=Docker
+    # https://github.com/fcuiller/docker-compose-telegraf-influxdb-grafana/blob/master/docker-compose.yml
+    # https://www.youtube.com/watch?v=xaHu52DA1pg
+    image: telegraf:1.38
+    container_name: telegraf
+    hostname: "${HOSTNAME:-mi-servidor}"
+    volumes:
+      # Montamos el archivo de configuración desde el proyecto local
+      # hacia la ruta que Telegraf lee por defecto dentro del contenedor
+      # :ro (read-only) significa que el contenedor puede leer el archivo
+      # pero no modificarlo, lo cual es una buena práctica de seguridad.
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+
+      # Para leer métricas del HOST (no del contenedor en sí), necesitamos
+      # montar los pseudo-filesystems del sistema operativo real.
+      # En Linux, toda la información del sistema vive en /proc y /sys.
+      - /proc:/rootfs/proc:ro
+      - /sys:/rootfs/sys:ro
+      - /etc:/rootfs/etc:ro
+    environment:
+      INFLUXDB_TOKEN: ${INFLUXDB_TOKEN}
+      INFLUXDB_ORG: ${INFLUXDB_ORG}
+      INFLUXDB_BUCKET: ${INFLUXDB_BUCKET}
+
+      # La URL de InfluxDB dentro de la red de Docker Compose. "influxdb"
+      # es el nombre del servicio, y 8086 es el puerto interno que expone InfluxDB.
+      INFLUXDB_URL: http://influxdb:8086
+
+      # Le indicamos a Telegraf dónde encontrar el /proc y /sys del host real,
+      # ya que los montamos en /rootfs/ en lugar de la ruta original.
+      HOST_PROC: /rootfs/proc
+      HOST_SYS: /rootfs/sys
+      HOST_ETC: /rootfs/etc
+    depends_on:
+      influxdb:
+        # Telegraf no arranca hasta que InfluxDB pase su healthcheck.
+        # Sin esto, Telegraf intentaría conectarse antes de que InfluxDB
+        # esté listo y fallaría en los primeros intentos de escritura.
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  # Definimos los volúmenes nombrados para InfluxDB. Docker se encargará de
+  # crearlos en el host.
+  influxdb2-data:
+  influxdb2-config:
