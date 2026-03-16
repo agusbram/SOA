@@ -1,0 +1,4 @@
+.env
+
+# Directorios generados por Docker que no deben versionarse
+influxdb_data/
