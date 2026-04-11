@@ -39,7 +39,7 @@ services:
       # Si responde OK, el contenedor está "healthy".
       # Esto permite que Telegraf espere a que InfluxDB esté realmente listo.
       # Fuente: https://docs.influxdata.com/influxdb/v2/api/v2/#tag/Ping
-      test: ["CMD", "influx", "ping", "https://localhost:8086", "--skip-verify"]
+      test: ["CMD", "influx", "ping", "--host", "https://localhost:8086", "--skip-verify"]
       interval: 30s
       timeout: 10s
       retries: 5
