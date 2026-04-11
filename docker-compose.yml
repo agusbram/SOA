@@ -16,8 +16,8 @@ services:
       DOCKER_INFLUXDB_INIT_RETENTION: ${INFLUXDB_RETENTION}
 
       # Activa TLS nativo en InfluxDB (Comentar en Localhost)
-      INFLUXD_TLS_CERT: /etc/ssl/influxdb/fullchain.pem
-      INFLUXD_TLS_KEY: /etc/ssl/influxdb/privkey.pem
+      INFLUXD_TLS_CERT: /etc/ssl/influxdb/fullchain1.pem
+      INFLUXD_TLS_KEY: /etc/ssl/influxdb/privkey1.pem
     volumes:
       # Usa volúmenes nombrados para que los datos persistan aunque se haga "docker compose down".
       - type: volume
@@ -31,9 +31,7 @@ services:
 
       # (Comentar en Localhost)
       # Montamos los certificados de Let's Encrypt dentro del contenedor
-      - /etc/letsencrypt/live/bfts2026.mooo.com:/etc/ssl/influxdb:ro
-      # Necesario para que el contenedor pueda leer los symlinks de certbot
-      - /etc/letsencrypt/archive/bfts2026.mooo.com:/etc/letsencrypt/archive/bfts2026.mooo.com:ro
+      - /etc/letsencrypt/archive/bfts2026.mooo.com:/etc/ssl/influxdb:ro
     restart: unless-stopped
     healthcheck:
       # "CMD" significa que Docker ejecuta el comando directamente,
