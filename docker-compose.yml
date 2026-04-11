@@ -14,6 +14,10 @@ services:
       DOCKER_INFLUXDB_INIT_ORG: ${INFLUXDB_ORG}
       DOCKER_INFLUXDB_INIT_BUCKET: ${INFLUXDB_BUCKET}
       DOCKER_INFLUXDB_INIT_RETENTION: ${INFLUXDB_RETENTION}
+
+      # Activa TLS nativo en InfluxDB (Comentar en Localhost)
+      INFLUXD_TLS_CERT: /etc/ssl/influxdb/fullchain.pem
+      INFLUXD_TLS_KEY: /etc/ssl/influxdb/privkey.pem
     volumes:
       # Usa volúmenes nombrados para que los datos persistan aunque se haga "docker compose down".
       - type: volume
@@ -24,6 +28,12 @@ services:
         # Donde guarda su configuración generada en el setup.
         source: influxdb2-config
         target: /etc/influxdb2
+
+      # (Comentar en Localhost)
+      # Montamos los certificados de Let's Encrypt dentro del contenedor
+      - /etc/letsencrypt/live/bfts2026.mooo.com:/etc/ssl/influxdb:ro
+      # Necesario para que el contenedor pueda leer los symlinks de certbot
+      - /etc/letsencrypt/archive/bfts2026.mooo.com:/etc/letsencrypt/archive/bfts2026.mooo.com:ro
     restart: unless-stopped
     healthcheck:
       # "CMD" significa que Docker ejecuta el comando directamente,
@@ -68,7 +78,10 @@ services:
 
       # La URL de InfluxDB dentro de la red de Docker Compose. "influxdb"
       # es el nombre del servicio, y 8086 es el puerto interno que expone InfluxDB.
-      INFLUXDB_URL: http://influxdb:8086
+      INFLUXDB_URL: https://influxdb:8086
+
+      # Para localhost, usar:
+      # INFLUXDB_URL: http://influxdb:8086
 
       # Le indicamos a Telegraf dónde encontrar el /proc y /sys del host real,
       # ya que los montamos en /rootfs/ en lugar de la ruta original.
