@@ -1,9 +1,9 @@
-# Grupo 1 — Telegraf + InfluxDB 2.x
+# Grupo 1: Telegraf + InfluxDB 2.x
 ## Sistema de recolección y almacenamiento de métricas
 
-> **Materia:** Arquitectura Orientada a Servicios
-> **Tecnologías:** Telegraf 1.38 · InfluxDB 2.8 · Docker Compose
-> **Rol en el TP integrado:** Recolección de métricas del host y almacenamiento en series temporales para consumo del Grupo 2 (Grafana)
+> **Materia:** Arquitectura Orientada a Servicios                
+> **Tecnologías:** Telegraf 1.38 · InfluxDB 2.8 · Docker Compose                
+> **Rol en el TP integrado:** Recolección de métricas del host y almacenamiento en series temporales para consumo del Grupo 2 (Grafana)               
 
 ---
 
@@ -28,7 +28,7 @@
 
 Este repositorio implementa la capa de **recolección y almacenamiento** del sistema de observabilidad del TP integrado. El flujo es el siguiente:
 
-```
+<!-- ```
 [Sistema Operativo del Host]
          │
          │  Telegraf lee /proc y /sys cada 10 segundos
@@ -37,12 +37,14 @@ Este repositorio implementa la capa de **recolección y almacenamiento** del sis
          │
          │  Escribe via HTTP usando InfluxDB Line Protocol
          ▼
-   [ InfluxDB 2.x ]
+   [ InfluxDB 2.8 ]
          │
          │  El Grupo 2 (Grafana) se conecta desde acá
          ▼
     [ Grafana ]
-```
+``` -->
+
+![Flujo de datos: arquitectura integrada](img/Estructura.png)
 
 Telegraf recolecta métricas de CPU, memoria, disco, red, carga del sistema y procesos, y las almacena como series temporales (una secuencia de valores medidos a lo largo del tiempo) en InfluxDB, organizadas por host.
 
