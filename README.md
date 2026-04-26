@@ -1,4 +1,4 @@
-# Grupo 1: Telegraf + InfluxDB 2.x
+# Grupo 1: Telegraf + InfluxDB 2.8
 ## Sistema de recolección y almacenamiento de métricas
 
 > **Materia:** Arquitectura Orientada a Servicios                
