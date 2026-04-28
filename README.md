@@ -20,7 +20,6 @@
 9. [Estado on/off de servicios](#estado-onoff-de-servicios)
 10. [Comandos útiles](#comandos-útiles)
 11. [Resultados, pruebas y evidencias](#resultados-pruebas-y-evidencias)
-12. [Problemas encontrados y soluciones](#problemas-encontrados-y-soluciones)
 
 ---
 
@@ -389,22 +388,3 @@ Captura del Data Explorer mostrando la measurement `http_response` con el campo 
 ### Dashboard en Grafana conectado a InfluxDB
 
 ![Captura del dashboard del Grupo 2 en Grafana mostrando métricas provenientes de este InfluxDB](img/7.png)
-
----
-
-## Problemas encontrados y soluciones
-
-**Bucket no visible tras reinicios**
-El bucket desaparecía de la interfaz de InfluxDB luego de ciertos reinicios. Causa: inconsistencias en los volúmenes de Docker tras reinicios parciales o uso accidental de `docker compose down -v`. Solución: reinicialización limpia borrando los volúmenes explícitamente.
-
-**Token inválido al reiniciar**
-Telegraf no podía escribir con error `failed to write metrics`. Causa: el token en `.env` no coincidía con el que InfluxDB tenía registrado en el volumen. Solución: ejecutar `docker compose down -v` para reinicializar InfluxDB con el token actual del `.env`.
-
-**Symlinks de Let's Encrypt no resueltos dentro del contenedor**
-Al montar `/etc/letsencrypt/live/` en el contenedor, los archivos `.pem` son symlinks con rutas relativas que el contenedor no puede resolver. Solución: montar directamente `/etc/letsencrypt/archive/` donde están los archivos reales (`fullchain1.pem`, `privkey1.pem`).
-
-**Healthcheck fallando con TLS activo**
-Al habilitar TLS en InfluxDB, el comando `influx ping` del healthcheck seguía intentando conectarse por HTTP. Solución: agregar `--host https://localhost:8086 --skip-verify` al comando del healthcheck.
-
-**Warnings de `inputs.diskio` con dispositivos loop**
-Telegraf intentaba leer metadatos de dispositivos `loop0`-`loop41` desde `/dev/`, que no estaba montado en el contenedor. Los warnings no afectan las métricas principales y son esperables en este entorno.
