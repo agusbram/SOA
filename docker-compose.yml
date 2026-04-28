@@ -38,6 +38,7 @@ services:
       # "influx ping" llama al endpoint GET /health de la API de InfluxDB.
       # Si responde OK, el contenedor está "healthy".
       # Esto permite que Telegraf espere a que InfluxDB esté realmente listo.
+      # con "skip-verify" evitamos que falle por el certificado TLS auto-firmado.
       # Fuente: https://docs.influxdata.com/influxdb/v2/api/v2/#tag/Ping
       test: ["CMD", "influx", "ping", "--host", "https://localhost:8086", "--skip-verify"]
       interval: 30s
